@@ -17,17 +17,29 @@ export class CheckoutController {
 
   @Post()
   create(@Body() createCheckoutDto: CreateCheckoutDto) {
-    return this.checkoutService.create(createCheckoutDto);
+    const data = {
+      ...createCheckoutDto,
+      expirationDate: new Date(createCheckoutDto.expirationDate),
+    };
+    return this.checkoutService.create(data);
   }
 
   @Get()
-  findAll() {
-    return this.checkoutService.findAll();
+  async findAll() {
+    const result = await this.checkoutService.findAll();
+    result.map((item) => {
+      item.cardNumber = this.maskCard(item.cardNumber);
+    });
+    return result;
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.checkoutService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const result = await this.checkoutService.findOne(+id);
+    return {
+      ...result,
+      cardNumber: this.maskCard(result.cardNumber),
+    };
   }
 
   @Patch(':id')
@@ -35,11 +47,19 @@ export class CheckoutController {
     @Param('id') id: string,
     @Body() updateCheckoutDto: UpdateCheckoutDto,
   ) {
-    return this.checkoutService.update(+id, updateCheckoutDto);
+    const data = {
+      ...updateCheckoutDto,
+      expirationDate: new Date(updateCheckoutDto.expirationDate),
+    };
+    return this.checkoutService.update(+id, data);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.checkoutService.remove(+id);
+  }
+
+  maskCard(texto) {
+    return texto.replace(/(?<=\d{4})\d(?=\d{4})/g, '*');
   }
 }
