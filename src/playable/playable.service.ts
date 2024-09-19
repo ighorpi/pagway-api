@@ -1,23 +1,52 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePlayableDto } from './dto/create-playable.dto';
 import { UpdatePlayableDto } from './dto/update-playable.dto';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class PlayableService {
-  create(createPlayableDto: CreatePlayableDto) {
-    return 'This action adds a new playable';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createPlayableDto: CreatePlayableDto) {
+    const result = await this.prisma.payable.create({
+      data: {
+        amount: createPlayableDto.amount,
+        cost: createPlayableDto.cost,
+        paymentDate: createPlayableDto.paymentDate,
+        checkoutId: createPlayableDto.checkoutId,
+      },
+    });
+    return result;
   }
 
-  findAll() {
-    return `This action returns all playable`;
+  async findAll() {
+    const result = await this.prisma.payable.findMany({});
+    return result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} playable`;
+  async findOne(id: number) {
+    const result = await this.prisma.payable.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    return result;
   }
 
   update(id: number, updatePlayableDto: UpdatePlayableDto) {
-    return `This action updates a #${id} playable`;
+    const result = this.prisma.payable.update({
+      data: {
+        amount: updatePlayableDto.amount,
+        checkoutId: updatePlayableDto.checkoutId,
+        cost: updatePlayableDto.cost,
+        paymentDate: updatePlayableDto.paymentDate,
+        status: updatePlayableDto.status,
+      },
+      where: {
+        id: id,
+      },
+    });
+    return result;
   }
 
   remove(id: number) {

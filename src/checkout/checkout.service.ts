@@ -43,7 +43,7 @@ export class CheckoutService {
   }
 
   async update(id: number, checkoutDto: UpdateCheckoutDto) {
-    const result = await this.prisma.checkout.create({
+    const result = await this.prisma.checkout.update({
       data: {
         transactionId: checkoutDto.transactionId,
         amount: checkoutDto.amount,
@@ -52,6 +52,9 @@ export class CheckoutService {
         cardNumber: checkoutDto.cardNumber,
         cvv: checkoutDto.cvv,
         expirationDate: checkoutDto.expirationDate,
+      },
+      where: {
+        id: id,
       },
     });
     return result;
