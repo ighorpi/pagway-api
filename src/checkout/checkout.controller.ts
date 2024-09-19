@@ -35,7 +35,7 @@ export class CheckoutController {
     @Param('id') id: string,
     @Body() updateCheckoutDto: UpdateCheckoutDto,
   ) {
-    return this.checkoutService.update(+id, updateCheckoutDto);
+    return this.checkoutService.update(updateCheckoutDto);
   }
 
   @Delete(':id')
