@@ -7,6 +7,39 @@ import { PrismaService } from '../prisma.service';
 export class CheckoutService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async charge(ckeckoutDto: CreateCheckoutDto) {
+    const dMaisTrinta = new Date(new Date().setDate(new Date().getDate() + 30));
+
+    const [checkout, payable] = await this.prisma.$transaction(
+      async (prisma) => {
+        const checkout = await prisma.checkout.create({
+          data: {
+            amount: ckeckoutDto.amount,
+            cardHolder: ckeckoutDto.cardHolder,
+            cardNumber: ckeckoutDto.cardNumber,
+            cvv: ckeckoutDto.cvv,
+            description: ckeckoutDto.description,
+            transactionId: ckeckoutDto.transactionId,
+            expirationDate: ckeckoutDto.expirationDate,
+          },
+        });
+
+        const payable = await prisma.payable.create({
+          data: {
+            amount: ckeckoutDto.amount,
+            paymentDate: dMaisTrinta,
+            cost: ckeckoutDto.amount - ckeckoutDto.amount * 0.05, // 5% de taxa
+            checkoutId: checkout.id,
+          },
+        });
+
+        return [checkout, payable];
+      },
+    );
+
+    return { checkout, payable };
+  }
+
   async create(checkoutDto: CreateCheckoutDto) {
     const result = await this.prisma.checkout.create({
       data: {
