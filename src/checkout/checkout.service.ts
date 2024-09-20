@@ -40,6 +40,36 @@ export class CheckoutService {
     return { checkout, payable };
   }
 
+  async balance() {
+    const result = await this.prisma.payable.aggregate({
+      _sum: {
+        cost: true,
+      },
+      where: {
+        paymentDate: {
+          lte: new Date(),
+        },
+      },
+    });
+
+    return result;
+  }
+
+  async futures() {
+    const result = await this.prisma.payable.aggregate({
+      _sum: {
+        cost: true,
+      },
+      where: {
+        paymentDate: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    return result;
+  }
+
   async create(checkoutDto: CreateCheckoutDto) {
     const result = await this.prisma.checkout.create({
       data: {
@@ -56,13 +86,20 @@ export class CheckoutService {
   }
 
   async findAll() {
-    return await this.prisma.checkout.findMany({});
+    return await this.prisma.checkout.findMany({
+      include: {
+        payables: true,
+      },
+    });
   }
 
   async findOne(id: number) {
     return await this.prisma.checkout.findUnique({
       where: {
         id: id,
+      },
+      include: {
+        payables: true,
       },
     });
   }
@@ -71,6 +108,9 @@ export class CheckoutService {
     return await this.prisma.checkout.findUnique({
       where: {
         transactionId: id,
+      },
+      include: {
+        payables: true,
       },
     });
   }
