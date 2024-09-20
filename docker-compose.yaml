@@ -1,8 +1,8 @@
 version: '3.9'
 services:
   app:
-    container_name: pagway-api-bot
-    image: ghcr.io/ighorpi/pagway-api-bot
+    container_name: pagway-api
+    image: ghcr.io/ighorpi/pagway-api
     build:
       context: .
       dockerfile: Dockerfile
