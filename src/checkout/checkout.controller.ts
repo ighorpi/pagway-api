@@ -33,6 +33,22 @@ export class CheckoutController {
     return result;
   }
 
+  @Get('balance')
+  async balance() {
+    const result = await this.checkoutService.balance();
+    return {
+      ...result,
+    };
+  }
+
+  @Get('futures')
+  async futures() {
+    const result = await this.checkoutService.futures();
+    return {
+      ...result,
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const result = await this.checkoutService.findOne(+id);
