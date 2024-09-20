@@ -16,12 +16,13 @@ export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
 
   @Post()
-  create(@Body() createCheckoutDto: CreateCheckoutDto) {
+  async create(@Body() createCheckoutDto: CreateCheckoutDto) {
     const data = {
       ...createCheckoutDto,
       expirationDate: new Date(createCheckoutDto.expirationDate),
     };
-    return this.checkoutService.create(data);
+    const result = await this.checkoutService.charge(data);
+    return { ...result, cardNumber: this.maskCard(result.cardNumber) };
   }
 
   @Get()

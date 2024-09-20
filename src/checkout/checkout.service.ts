@@ -1,15 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { UpdateCheckoutDto } from './dto/update-checkout.dto';
 import { PrismaService } from '../prisma.service';
+import { randomUUID } from 'crypto';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class CheckoutService {
+  private readonly logger = new Logger(CheckoutService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   async charge(ckeckoutDto: CreateCheckoutDto) {
     const dMaisTrinta = new Date(new Date().setDate(new Date().getDate() + 30));
-
+    const transactionId = randomUUID();
     const [checkout, payable] = await this.prisma.$transaction(
       async (prisma) => {
         const checkout = await prisma.checkout.create({
@@ -19,7 +22,7 @@ export class CheckoutService {
             cardNumber: ckeckoutDto.cardNumber,
             cvv: ckeckoutDto.cvv,
             description: ckeckoutDto.description,
-            transactionId: ckeckoutDto.transactionId,
+            transactionId: transactionId,
             expirationDate: ckeckoutDto.expirationDate,
           },
         });
@@ -37,7 +40,28 @@ export class CheckoutService {
       },
     );
 
-    return { checkout, payable };
+    return { ...checkout, payable };
+  }
+
+  @Cron('0 5 * * *')
+  verificandoStatus() {
+    this.logger.log('Verificando Status Pendentes');
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const amanha = new Date(hoje);
+    amanha.setDate(hoje.getDate() + 1);
+    this.prisma.payable.updateMany({
+      data: {
+        status: 'liquidado',
+      },
+      where: {
+        status: 'pendente',
+        paymentDate: {
+          gte: hoje,
+          lt: amanha,
+        },
+      },
+    });
   }
 
   async balance() {
@@ -52,7 +76,7 @@ export class CheckoutService {
       },
     });
 
-    return result;
+    return { saldo_disponivel: Number(result._sum.cost || 0) };
   }
 
   async futures() {
@@ -67,7 +91,9 @@ export class CheckoutService {
       },
     });
 
-    return result;
+    return {
+      saldo_futuro: Number(result._sum.cost || 0),
+    };
   }
 
   async create(checkoutDto: CreateCheckoutDto) {
